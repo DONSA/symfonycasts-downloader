@@ -1,0 +1,25 @@
+{
+    "name": "donsa/symfonycasts-downloader",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nuno Lopes",
+            "email": "nunolopes99@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {"App\\": "src/"}
+    },
+    "require": {
+        "php": "7.1.*",
+        "ext-dom": "*",
+        "ext-json": "*",
+        "guzzlehttp/guzzle": "^6.2",
+        "symfony/dom-crawler": "^4.2",
+        "symfony/css-selector": "^4.2",
+        "symfony/console": "^4.2"
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^4.2"
+    }
+}

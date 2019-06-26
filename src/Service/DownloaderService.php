@@ -93,22 +93,26 @@ class DownloaderService
                 }
 
                 $crawler = new Crawler($response->getBody()->getContents());
-                foreach ($crawler->filter('.download-buy-buttons.pull-right ul li a') as $i => $a) {
-                    $fileName = '';
-                    switch ($i) {
-                        case 0:
-                            $fileName = sprintf('%03d', $chaptersCounter) . "-{$name}-code.zip";
-                            break;
-                        case 1:
+                foreach ($crawler->filter('[aria-labelledby="downloadDropdown"] > a') as $i => $a) {
+                    $url = $a->getAttribute('href');
+                    $fileName = false;
+                    switch ($url) {
+                        case (false !== strpos($url, 'video')):
                             $fileName = sprintf('%03d', $chaptersCounter) . "-{$name}.mp4";
                             break;
-                        case 2:
+                        case (false !== strpos($url, 'script')):
                             $fileName = sprintf('%03d', $chaptersCounter) . "-{$name}-script.zip";
                             break;
+                            case (false !== strpos($url, 'code')):
+                            $fileName = sprintf('%03d', $chaptersCounter) . "-{$name}-code.zip";
+                            break;
+                        default:
+                            $this->io->warning('Unkown Link Type: ' . $url);
                     }
 
                     if (!$fileName) {
                         $this->io->warning('Unable to get download links');
+                        continue;
                     }
 
                     if (file_exists("{$coursePath}/{$fileName}")) {
@@ -118,9 +122,8 @@ class DownloaderService
                     }
 
                     $this->downloadFile($a->getAttribute('href'), $coursePath, $fileName);
+                    $this->io->newLine();
                 }
-
-                $this->io->newLine();
             }
         }
 
@@ -206,7 +209,7 @@ class DownloaderService
             $chapters = [];
             $response = $this->client->get($courseUri);
             $crawler = new Crawler($response->getBody()->getContents());
-            foreach ($crawler->filter('div[class*=play-circle-popup] > a') as $a) {
+            foreach ($crawler->filter('ul.chapter-list > li > a') as $a) {
                 if ($a->getAttribute('href') === '#') {
                     continue;
                 }

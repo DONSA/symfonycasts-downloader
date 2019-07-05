@@ -101,7 +101,7 @@ class DownloaderService
                             $fileName = sprintf('%03d', $chaptersCounter) . "-{$name}.mp4";
                             break;
                         case (false !== strpos($url, 'script')):
-                            $fileName = sprintf('%03d', $chaptersCounter) . "-{$name}-script.zip";
+                            $fileName = sprintf('%03d', $chaptersCounter) . "-{$name}-script.pdf";
                             break;
                             case (false !== strpos($url, 'code')):
                             $fileName = sprintf('%03d', $chaptersCounter) . "-{$name}-code.zip";

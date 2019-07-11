@@ -10,6 +10,9 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class DownloaderService
 {
+    
+     const BAD_WINDOWS_PATH_CHARS = ['<','>',':','"','/','\\','|','?','*'];
+    
     /**
      * @var SymfonyStyle $io
      */
@@ -70,7 +73,9 @@ class DownloaderService
                 continue;
             }
 
-            $coursePath = "{$downloadPath}/{$title}";
+            $titlePath = str_replace(self::BAD_WINDOWS_PATH_CHARS, '-', $title);
+            $coursePath = "{$downloadPath}/{$titlePath}";
+            
             if (!is_dir($coursePath) && !mkdir($coursePath) && !is_dir($coursePath)) {
                 $this->io->error('Unable to create course directory');
 

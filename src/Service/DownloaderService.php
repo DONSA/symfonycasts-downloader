@@ -59,6 +59,18 @@ class DownloaderService
         }
 
         $courses = $this->fetchCourses();
+        $coursesWanted = (array) ($this->configs['COURSES'] ?? $courses);
+
+        $courses = array_filter(
+            $courses,
+            function ($title) use ($coursesWanted) {
+                return in_array($title, $coursesWanted);
+            },
+            ARRAY_FILTER_USE_KEY
+        );
+
+        $this->io->section('Wanted courses');
+        $this->io->listing(array_keys($courses));
 
         $coursesCounter = 0;
         $coursesCount = \count($courses);

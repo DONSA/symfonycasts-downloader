@@ -65,8 +65,7 @@ class DownloaderService
             $courses,
             function ($title) use ($coursesWanted) {
                 return in_array($title, $coursesWanted);
-            },
-            ARRAY_FILTER_USE_KEY
+            }
         );
 
         $this->io->section('Wanted courses');

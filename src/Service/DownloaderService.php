@@ -10,27 +10,18 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class DownloaderService
 {
-    
-     const BAD_WINDOWS_PATH_CHARS = ['<','>',':','"','/','\\','|','?','*'];
-    
-    /**
-     * @var SymfonyStyle $io
-     */
+     private const BAD_WINDOWS_PATH_CHARS = ['<','>',':','"','/','\\','|','?','*'];
+
+    /** @var SymfonyStyle $io */
     private $io;
 
-    /**
-     * @var array $configs
-     */
+    /** @var array $configs */
     private $configs;
 
-    /**
-     * @var Client $client
-     */
+    /** @var Client $client */
     private $client;
 
     /**
-     * App constructor.
-     *
      * @param SymfonyStyle $io
      * @param array        $configs
      */
@@ -45,7 +36,7 @@ class DownloaderService
     }
 
     /**
-     * Download courses
+     * @return void
      */
     public function download(): void
     {
@@ -58,16 +49,7 @@ class DownloaderService
             return;
         }
 
-        $courses = $this->fetchCourses();
-        $coursesWanted = (array) ($this->configs['COURSES'] ?? $courses);
-
-        $courses = array_filter(
-            $courses,
-            function ($title) use ($coursesWanted) {
-                return in_array($title, $coursesWanted);
-            },
-            ARRAY_FILTER_USE_KEY
-        );
+        $courses = $this->getCourses();
 
         $this->io->section('Wanted courses');
         $this->io->listing(array_keys($courses));
@@ -87,7 +69,7 @@ class DownloaderService
 
             $titlePath = str_replace(self::BAD_WINDOWS_PATH_CHARS, '-', $title);
             $coursePath = "{$downloadPath}/{$titlePath}";
-            
+
             if (!is_dir($coursePath) && !mkdir($coursePath) && !is_dir($coursePath)) {
                 $this->io->error('Unable to create course directory');
 
@@ -191,8 +173,25 @@ class DownloaderService
     }
 
     /**
-     * Fetch courses
-     *
+     * @return array
+     */
+    private function getCourses(): array
+    {
+        $courses = $this->fetchCourses();
+        $whitelist = $this->configs['COURSES'];
+
+        if (!empty($whitelist)) {
+            foreach ($courses as $title => $lessons) {
+                if (!in_array($title, $whitelist, true)) {
+                    unset($courses[$title]);
+                }
+            }
+        }
+
+        return $courses;
+    }
+
+    /**
      * @return array
      */
     private function fetchCourses(): array
@@ -215,7 +214,6 @@ class DownloaderService
         $progressBar->start();
 
         foreach ($elements as $itemElement) {
-
             $titleElement = new Crawler($itemElement);
             $courseTitle = $titleElement->filter('.course-list-item-title')->text();
             $courseUri = $itemElement->getAttribute('href');
@@ -250,7 +248,7 @@ class DownloaderService
     }
 
     /**
-     * Login
+     * @return void
      */
     private function login(): void
     {
@@ -286,8 +284,6 @@ class DownloaderService
     }
 
     /**
-     * Convert dash to title
-     *
      * @param string $text
      * @param bool   $capitalizeFirstCharacter
      *

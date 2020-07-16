@@ -92,7 +92,7 @@ class DownloaderService
                 }
 
                 $crawler = new Crawler($response->getBody()->getContents());
-                foreach ($crawler->filter('[aria-labelledby="downloadDropdown"] > a') as $i => $a) {
+                foreach ($crawler->filter('[aria-labelledby="downloadDropdown"] a') as $i => $a) {
                     $url = $a->getAttribute('href');
                     $fileName = false;
                     switch ($url) {

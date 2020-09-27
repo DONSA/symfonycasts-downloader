@@ -60,6 +60,8 @@ class DownloaderService
             ++$coursesCounter;
             $this->io->newLine(3);
             $this->io->title("Processing course: '{$title}' ({$coursesCounter} of {$coursesCount})");
+            $isCodeDownloaded = false;
+            $isScriptDownloaded = false;
 
             if (empty($urls)) {
                 $this->io->warning('No chapters to download');
@@ -99,14 +101,24 @@ class DownloaderService
                         case (false !== strpos($url, 'video')):
                             $fileName = sprintf('%03d', $chaptersCounter) . "-{$name}.mp4";
                             break;
-                        case (false !== strpos($url, 'script')):
-                            $fileName = sprintf('%03d', $chaptersCounter) . "-{$name}-script.pdf";
+                        case (false !== strpos($url, 'script') && !$isScriptDownloaded):
+                            $fileName = "{$titlePath}.pdf";
+                            $isScriptDownloaded = true;
                             break;
-                            case (false !== strpos($url, 'code')):
-                            $fileName = sprintf('%03d', $chaptersCounter) . "-{$name}-code.zip";
+                        case (false !== strpos($url, 'code') && !$isCodeDownloaded):
+                            $fileName = "{$titlePath}.zip";
+                            $isCodeDownloaded = true;
+                            break;
+                        case (false !== strpos($url, 'script') && $isScriptDownloaded):
+                        case (false !== strpos($url, 'code') && $isCodeDownloaded):
+                            $fileName = null;
                             break;
                         default:
                             $this->io->warning('Unkown Link Type: ' . $url);
+                    }
+
+                    if($fileName === null) {
+                        continue;
                     }
 
                     if (!$fileName) {
@@ -116,7 +128,6 @@ class DownloaderService
 
                     if (file_exists("{$coursePath}/{$fileName}")) {
                         $this->io->writeln("File '{$fileName}' was already downloaded");
-
                         continue;
                     }
 

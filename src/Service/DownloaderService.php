@@ -80,7 +80,7 @@ class DownloaderService
 
             foreach ($urls as $name => $url){
                 if(preg_match("/\/activity\/[0-9]{3}$/", $url)) {
-                    unset($urls[$k]);
+                    unset($urls[$name]);
                 }
             }
 

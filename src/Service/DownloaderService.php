@@ -267,10 +267,10 @@ class DownloaderService
         }
 
         $currentUrl = null;
-        $this->client->post('login_check', [
+        $this->client->post('login', [
             'form_params' => [
-                '_email' => $this->configs['EMAIL'],
-                '_password' => $this->configs['PASSWORD'],
+                'email' => $this->configs['EMAIL'],
+                'password' => $this->configs['PASSWORD'],
                 '_csrf_token' => $csrfToken
             ],
             'on_stats' => function(TransferStats $stats) use (&$currentUrl) {

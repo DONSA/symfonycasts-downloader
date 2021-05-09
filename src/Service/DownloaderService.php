@@ -77,6 +77,13 @@ class DownloaderService
             }
 
             $chaptersCounter = 0;
+
+            foreach ($urls as $name => $url){
+                if(preg_match("/\/activity\/[0-9]{3}$/", $url)) {
+                    unset($urls[$name]);
+                }
+            }
+
             $chaptersCount = \count($urls);
             foreach ($urls as $name => $url) {
                 ++$chaptersCounter;

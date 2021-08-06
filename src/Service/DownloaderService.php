@@ -2,11 +2,14 @@
 
 namespace App\Service;
 
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\TransferStats;
+use RuntimeException;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DomCrawler\Crawler;
+use function count;
 
 class DownloaderService
 {
@@ -31,7 +34,7 @@ class DownloaderService
     $this->configs = $configs;
     $this->client = new Client([
       'base_uri' => $this->configs['URL'],
-      'cookies' => true
+      'cookies' => TRUE,
     ]);
   }
 
@@ -50,18 +53,17 @@ class DownloaderService
     }
 
     $courses = $this->getCourses();
-
     $this->io->section('Wanted courses');
     $this->io->listing(array_keys($courses));
 
     $coursesCounter = 0;
-    $coursesCount = \count($courses);
+    $coursesCount = count($courses);
     foreach ($courses as $title => $urls) {
       ++$coursesCounter;
       $this->io->newLine(3);
       $this->io->title("Processing course: '{$title}' ({$coursesCounter} of {$coursesCount})");
-      $isCodeDownloaded = false;
-      $isScriptDownloaded = false;
+      $isCodeDownloaded = FALSE;
+      $isScriptDownloaded = FALSE;
 
       if (empty($urls)) {
         $this->io->warning('No chapters to download');
@@ -86,7 +88,7 @@ class DownloaderService
         }
       }
 
-      $chaptersCount = \count($urls);
+      $chaptersCount = count($urls);
       foreach ($urls as $name => $url) {
         ++$chaptersCounter;
         $this->io->newLine();
@@ -103,28 +105,28 @@ class DownloaderService
         $crawler = new Crawler($response->getBody()->getContents());
         foreach ($crawler->filter('[aria-labelledby="downloadDropdown"] a') as $i => $a) {
           $url = $a->getAttribute('href');
-          $fileName = false;
+          $fileName = FALSE;
           switch ($url) {
-            case (false !== strpos($url, 'video')):
+            case (FALSE !== strpos($url, 'video')):
               $fileName = sprintf('%03d', $chaptersCounter) . "-{$name}.mp4";
               break;
-            case (false !== strpos($url, 'script') && !$isScriptDownloaded):
+            case (FALSE !== strpos($url, 'script') && !$isScriptDownloaded):
               $fileName = "{$titlePath}.pdf";
-              $isScriptDownloaded = true;
+              $isScriptDownloaded = TRUE;
               break;
-            case (false !== strpos($url, 'code') && !$isCodeDownloaded):
+            case (FALSE !== strpos($url, 'code') && !$isCodeDownloaded):
               $fileName = "{$titlePath}.zip";
-              $isCodeDownloaded = true;
+              $isCodeDownloaded = TRUE;
               break;
-            case (false !== strpos($url, 'script') && $isScriptDownloaded):
-            case (false !== strpos($url, 'code') && $isCodeDownloaded):
-              $fileName = null;
+            case (FALSE !== strpos($url, 'script') && $isScriptDownloaded):
+            case (FALSE !== strpos($url, 'code') && $isCodeDownloaded):
+              $fileName = NULL;
               break;
             default:
               $this->io->warning('Unkown Link Type: ' . $url);
           }
 
-          if ($fileName === null) {
+          if ($fileName === NULL) {
             continue;
           }
 
@@ -163,23 +165,23 @@ class DownloaderService
     }
 
     if (empty($csrfToken)) {
-      throw new \RuntimeException('Unable to authenticate');
+      throw new RuntimeException('Unable to authenticate');
     }
 
-    $currentUrl = null;
+    $currentUrl = NULL;
     $this->client->post('login', [
       'form_params' => [
         'email' => $this->configs['EMAIL'],
         'password' => $this->configs['PASSWORD'],
-        '_csrf_token' => $csrfToken
+        '_csrf_token' => $csrfToken,
       ],
       'on_stats' => function (TransferStats $stats) use (&$currentUrl) {
         $currentUrl = $stats->getEffectiveUri();
-      }
+      },
     ]);
 
     if ((string)$currentUrl !== 'https://symfonycasts.com/') {
-      throw new \RuntimeException('Authorization failed.');
+      throw new RuntimeException('Authorization failed.');
     }
   }
 
@@ -193,7 +195,7 @@ class DownloaderService
 
     if (!empty($whitelist)) {
       foreach ($courses as $title => $lessons) {
-        if (!in_array($title, $whitelist, true)) {
+        if (!in_array($title, $whitelist, TRUE)) {
           unset($courses[$title]);
         }
       }
@@ -211,22 +213,20 @@ class DownloaderService
 
     $blueprintFile = __DIR__ . '/../blueprint.json';
     if (file_exists($blueprintFile)) {
-      return json_decode(file_get_contents($blueprintFile), true);
+      return json_decode(file_get_contents($blueprintFile), TRUE);
     }
 
     $response = $this->client->get('/courses/filtering');
-
     $courses = [];
     $crawler = new Crawler($response->getBody()->getContents());
-    $elements = $crawler->filter('.js-course-item > a');
-
+    $elements = $crawler->filter('body > div.course-list-bookmark-container.js-course-item > div > div > a');
     $progressBar = $this->io->createProgressBar($elements->count());
     $progressBar->setFormat('<info>[%bar%]</info> %message%');
     $progressBar->start();
 
     foreach ($elements as $itemElement) {
       $titleElement = new Crawler($itemElement);
-      $courseTitle = $titleElement->filter('.course-list-item-title')->text();
+      $courseTitle = $titleElement->filter('img')->attr('alt');
       $courseUri = $itemElement->getAttribute('href');
 
       $progressBar->setMessage($courseTitle);
@@ -264,7 +264,7 @@ class DownloaderService
    *
    * @return mixed|string
    */
-  private function dashesToTitle($text, $capitalizeFirstCharacter = true)
+  private function dashesToTitle($text, $capitalizeFirstCharacter = TRUE)
   {
     $str = str_replace('-', ' ', ucwords($text, '-'));
 
@@ -285,7 +285,7 @@ class DownloaderService
   private function downloadFile($url, $filePath, $fileName): void
   {
     $io = $this->io;
-    $progressBar = null;
+    $progressBar = NULL;
     $file = "{$filePath}/{$fileName}";
 
     try {
@@ -294,13 +294,13 @@ class DownloaderService
         'allow_redirects' => ['max' => 2],
         'auth' => ['username', 'password'],
         'progress' => function ($total, $downloaded) use ($io, $fileName, &$progressBar) {
-          if ($total && $progressBar === null) {
+          if ($total && $progressBar === NULL) {
             $progressBar = $io->createProgressBar($total);
             $progressBar->setFormat("<info>[%bar%]</info> {$fileName}");
             $progressBar->start();
           }
 
-          if ($progressBar !== null) {
+          if ($progressBar !== NULL) {
             if ($total === $downloaded) {
               $progressBar->finish();
 
@@ -309,9 +309,9 @@ class DownloaderService
 
             $progressBar->setProgress($downloaded);
           }
-        }
+        },
       ]);
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
       $this->io->warning($e->getMessage());
 
       unlink($file);

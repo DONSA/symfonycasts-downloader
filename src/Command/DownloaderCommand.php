@@ -25,16 +25,17 @@ class DownloaderCommand extends Command
     if (!file_exists(__DIR__ . '/../local.ini')) {
       $io->error("Hint: Copy run 'cp application.init local.ini' and provide required credentials");
 
-      return;
+      return 1;
     }
 
     if (!$configs = parse_ini_file(__DIR__ . '/../local.ini')) {
       $io->error('Hint: try to wrap values inside local.ini with either double or single quotes');
 
-      return;
+      return 1;
     }
 
     $downloader = new DownloaderService($io, $configs);
     $downloader->download();
+    return 0;
   }
 }

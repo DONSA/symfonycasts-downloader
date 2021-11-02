@@ -218,7 +218,10 @@ class DownloaderService
 
         $blueprintFile = __DIR__ . '/../blueprint.json';
         if (file_exists($blueprintFile)) {
-            return json_decode(file_get_contents($blueprintFile), true);
+            $decodedBlueprint = json_decode(file_get_contents($blueprintFile), true);
+            if (count($decodedBlueprint) > 0){
+                return $decodedBlueprint;
+            }
         }
 
         $response = $this->client->get('/courses/filtering');

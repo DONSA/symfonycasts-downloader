@@ -218,14 +218,17 @@ class DownloaderService
 
         $blueprintFile = __DIR__ . '/../blueprint.json';
         if (file_exists($blueprintFile)) {
-            return json_decode(file_get_contents($blueprintFile), true);
+            $decodedBlueprint = json_decode(file_get_contents($blueprintFile), true);
+            if (count($decodedBlueprint) > 0){
+                return $decodedBlueprint;
+            }
         }
 
         $response = $this->client->get('/courses/filtering');
 
         $courses = [];
         $crawler = new Crawler($response->getBody()->getContents());
-        $elements = $crawler->filter('.js-course-item > a');
+        $elements = $crawler->filter('.js-course-item div.justify-content-between > a');
 
         $progressBar = $this->io->createProgressBar($elements->count());
         $progressBar->setFormat('<info>[%bar%]</info> %message%');
@@ -233,7 +236,7 @@ class DownloaderService
 
         foreach ($elements as $itemElement) {
             $titleElement = new Crawler($itemElement);
-            $courseTitle = $titleElement->filter('.course-list-item-title')->text();
+            $courseTitle = $titleElement->filter('h3')->text();
             $courseUri = $itemElement->getAttribute('href');
 
             $progressBar->setMessage($courseTitle);
